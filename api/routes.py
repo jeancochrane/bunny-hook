@@ -5,11 +5,12 @@ import json
 from flask import request, make_response
 
 from api import app
-from api.exceptions import PayloadException
+from api.exceptions import PayloadException, WorkerException
+from api.worker import Worker
 
 
 @app.route('/hooks/github/<branch_name>', methods=['POST'])
-def parse(branch_name):
+def receive_post(branch_name):
 
     # Initialize vars
     post = request.get_json()
@@ -23,12 +24,19 @@ def parse(branch_name):
     if ref:
         # For docs on the GitHub PushEvent payload, see
         # https://developer.github.com/v3/activity/events/types/#pushevent
-        branch = ref.split('/')[-1]
+        repo, branch = ref.split('/')[1], ref.split('/')[-1]
 
         if branch == branch_name:
-            # Action will go here
             status_code = 202
             resp['status'] = 'Running build!'
+
+            # TODO: queue this work
+            try:
+                worker = Worker(repo, ref)
+                worker.run()
+            except WorkerException as e:
+                status_code = 400
+                resp['status'] = str(e)
         else:
             # Nothing to do
             status_code = 402
