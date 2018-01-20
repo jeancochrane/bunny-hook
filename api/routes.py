@@ -24,19 +24,15 @@ def receive_post(branch_name):
     if ref:
         # For docs on the GitHub PushEvent payload, see
         # https://developer.github.com/v3/activity/events/types/#pushevent
-        repo, branch = ref.split('/')[1], ref.split('/')[-1]
+        branch = ref.split('/')[-1]
+        clone_url = post.get('clone_url')
+        repo = post.get('repository')
 
-        if branch == branch_name:
+        if branch == branch_name and repo:
+
+            repo_name = repo['name']
             status_code = 202
             resp['status'] = 'Running build!'
-
-            # TODO: queue this work
-            try:
-                worker = Worker(repo, ref)
-                worker.run()
-            except WorkerException as e:
-                status_code = 400
-                resp['status'] = str(e)
         else:
             # Nothing to do
             status_code = 402

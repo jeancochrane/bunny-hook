@@ -1,12 +1,10 @@
 # Where to clone the repo for running the build
-clone:
-    - to: /jean/bunny-hook
+clone: /jean/bunny-hook
 
-# Location of the build script
+# Location of the build scripts
 build:
-    - script: scripts/build.sh
+    - scripts/build.sh
 
-# Where to move the files
+# Location of deploy scripts
 deploy:
-    - to: /var/www/bunny-hook
-    - script: scripts/deploy.sh
+    - scripts/deploy.sh

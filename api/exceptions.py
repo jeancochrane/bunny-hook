@@ -5,4 +5,7 @@ class PayloadException(Exception):
     pass
 
 class WorkerException(Exception):
+    '''
+    Something went wrong in the worker process.
+    '''
     pass
