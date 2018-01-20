@@ -1,5 +1,5 @@
 # Where to clone the repo for running the build
-clone: /home/jean/bunny-hook/tests/
+clone: /tmp/bunny-hook-tests
 
 # Location of the build scripts
 build:
