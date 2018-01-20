@@ -1,34 +1,15 @@
 import os
 from unittest import TestCase, main
-from unittest.mock import Mock, create_autospec
-from subprocess import CompletedProcess
 
 import env
 from api.worker import Worker
 from api.exceptions import WorkerException
-
-
-def mock_subprocess(func):
-    '''
-    Decorator for mocking worker methods that run subprocesses.
-    '''
-    def new_test(self, *args, **kwargs):
-        return_value = CompletedProcess([], returncode=0)
-
-        self.worker.run_command = create_autospec(self.worker.run_command,
-                                                return_value=return_value)
-
-        self.worker.run_script = create_autospec(self.worker.run_script,
-                                                return_value=return_value)
-        func(self, *args, **kwargs)
-
-    return new_test
+from decorators import mock_subprocess
 
 
 class TestWorker(TestCase):
 
     def setUp(self):
-        # Use this repo for the integration test
         repo_name = 'bunny-hook'
         origin = 'https://github.com/jeancochrane/bunny-hook.git'
 
@@ -107,9 +88,3 @@ class TestWorker(TestCase):
 
         expected_msg = 'is missing `clone` directive'
         self.assertIn(expected_msg, str(e.exception))
-
-    def test_deploy(self):
-        '''
-        Integration test! Use this repo to actually run the `deploy` code.
-        '''
-        self.fail()

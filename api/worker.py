@@ -35,7 +35,7 @@ class Worker(object):
         This should probably have some more sophisticated permissioning (e.g.
         chrooting) before going live.
         '''
-        # Python chmod docs:
+        # Make script executable -- Python chmod docs:
         # https://docs.python.org/3/library/stat.html#stat.S_IXOTH
         os.chmod(script_path, 0o775)
 
@@ -43,12 +43,15 @@ class Worker(object):
 
     def deploy(self, tmp_path=None):
         '''
-        Run the build based on the config file.
+        Run build and deployment based on the config file.
         '''
+        print('Deploying %s' % self.repo_name)
         if not tmp_path:
             # Repo should have been cloned to /tmp/<repo-name>
             tmp_path = os.path.abspath(os.path.join(os.sep, 'tmp', self.repo_name))
 
+        print('Cloning {origin} into {tmp_path}...'.format(origin=self.origin,
+                                                           tmp_path=tmp_path))
         self.run_command(['git', 'clone', self.origin, tmp_path])
 
         # Check for a yaml file
@@ -67,6 +70,7 @@ class Worker(object):
             config_file = yaml_file
 
         # Parse the config file
+        print('Loading config file from %s...' % config_file)
         with open(config_file) as cf:
             config = yaml.load(cf)
 
@@ -82,16 +86,22 @@ class Worker(object):
             raise WorkerException('Deployment file %s is missing `clone` directive' % config_file)
 
         # Move repo from tmp to the clone path
+        print('Moving repo from {tmp_path} to {clone_path}...'.format(tmp_path=tmp_path,
+                                                                      clone_path=clone_path))
         self.run_command(['mv', tmp_path, clone_path])
 
         # Run build scripts, if they exist
         for script in build_scripts:
             script_path = os.path.join(clone_path, script)
+            print('Running build script %s...' % script_path)
             self.run_script(script_path)
 
         # Run deploy scripts, if they exist
         for script in deploy_scripts:
             script_path = os.path.join(clone_path, script)
+            print('Running deployment script %s...' % script_path)
             self.run_script(script_path)
+
+        print('Finished deploying %s!' % self.repo_name)
 
         return True
