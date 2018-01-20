@@ -1,5 +1,4 @@
-# Where to clone the repo for running the build
-clone: /jean/bunny-hook
+# Clone directive should go in this file, but it's missing!
 
 # Location of the build scripts
 build:

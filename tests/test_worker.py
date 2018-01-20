@@ -84,11 +84,29 @@ class TestWorker(TestCase):
         self.assertIn(expected_msg, str(e.exception))
 
     @mock_subprocess
-    def test_malformed_config_files(self):
+    def test_two_config_files(self):
         '''
-        Test a variety of config files that are misformed.
+        Test an error is raised when two config files are found.
         '''
-        self.fail()
+        two_configs = os.path.join(os.getcwd(), 'tests', 'configs', 'two-configs')
+        with self.assertRaises(WorkerException) as e:
+            self.worker.deploy(tmp_path=two_configs)
+
+        expected_msg = 'Found two config files in this repo! Delete one and try again'
+        self.assertIn(expected_msg, str(e.exception))
+
+    @mock_subprocess
+    def test_no_clone_directive_in_config_file(self):
+        '''
+        Test that an error is raised when no clone directive is found in the
+        config file.
+        '''
+        no_clone_config = os.path.join(os.getcwd(), 'tests', 'configs', 'no-clone')
+        with self.assertRaises(WorkerException) as e:
+            self.worker.deploy(tmp_path=no_clone_config)
+
+        expected_msg = 'is missing `clone` directive'
+        self.assertIn(expected_msg, str(e.exception))
 
     def test_deploy(self):
         '''

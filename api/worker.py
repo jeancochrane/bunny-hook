@@ -55,14 +55,11 @@ class Worker(object):
         yml_file = os.path.join(tmp_path, 'deploy.yml')
         yaml_file = os.path.join(tmp_path, 'deploy.yaml')
 
-        if not os.path.isfile(yml_file) or os.path.isfile(yaml_file):
+        if not (os.path.isfile(yml_file) or os.path.isfile(yaml_file)):
             raise WorkerException('Could not locate a `deploy.yml` file in your repo.')
 
         if os.path.isfile(yml_file) and os.path.isfile(yaml_file):
-            raise WorkerException('''
-                Found two different deploy config files in this repo!
-                Delete one and try again.
-            ''')
+            raise WorkerException('Found two config files in this repo! Delete one and try again.')
 
         if os.path.isfile(yml_file):
             config_file = yml_file
@@ -78,11 +75,11 @@ class Worker(object):
 
         clone_path = config.get('clone')
         build_scripts = config.get('build', [])
-        deploy = config.get('deploy', [])
+        deploy_scripts = config.get('deploy', [])
 
         # Enforce required directives
         if not clone_path:
-            raise WorkerException('deploy.yml missing `clone` directive')
+            raise WorkerException('Deployment file %s is missing `clone` directive' % config_file)
 
         # Move repo from tmp to the clone path
         self.run_command(['mv', tmp_path, clone_path])
