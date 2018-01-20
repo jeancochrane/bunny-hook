@@ -1,6 +1,7 @@
 from unittest import TestCase
 import json
 
+import env
 import api
 
 
@@ -16,7 +17,12 @@ class TestAPI(TestCase):
         '''
         The ref path from GitHub should be the same as the branch name.
         '''
-        post_data = json.dumps({'ref': 'refs/heads/master'})
+        post_data = json.dumps({
+                'ref': 'refs/heads/master',
+                'repository': {
+                    'name': 'test-repo'
+                }
+            })
         post_request = self.app.post('/hooks/github/master',
                                      content_type='application/json',
                                      data=post_data)
@@ -53,4 +59,4 @@ class TestAPI(TestCase):
                                          content_type='application/json',
                                          data=post_data)
 
-            self.assertTrue('Could not find payload variable `ref`' in excpt) 
+            self.assertTrue('Could not find payload variable `ref`' in excpt)
