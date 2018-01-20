@@ -58,6 +58,7 @@ class TestWorker(TestCase):
         '''
         Test an error is raised when no config file is found.
         '''
+        no_config = os.path.join(os.getcwd(), 'tests')
         with self.assertRaises(WorkerException) as e:
             self.worker.deploy()
 
