@@ -25,7 +25,7 @@ def receive_post(branch_name):
         # For docs on the GitHub PushEvent payload, see
         # https://developer.github.com/v3/activity/events/types/#pushevent
         branch = ref.split('/')[-1]
-        clone_url = post.get('clone_url')
+        origin = post.get('clone_url')
         repo = post.get('repository')
 
         if branch == branch_name and repo:
@@ -33,6 +33,8 @@ def receive_post(branch_name):
             repo_name = repo['name']
             status_code = 202
             resp['status'] = 'Running build!'
+            worker = Worker(repo_name, origin)
+            worker.deploy.delay()
         else:
             # Nothing to do
             status_code = 402
