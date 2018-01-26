@@ -13,12 +13,9 @@ class Worker(object):
     '''
     Class for handling all of the build stuff. Assume synchronous execution.
     '''
-    def __init__(self, repo_name, origin):
-        # Name of the repo
-        self.repo_name = repo_name
-
-        # Git origin
-        self.origin = origin
+    def __init__(self, cfg_file):
+        self.queue = Queue()
+        self.config = Parse(cfg_file)
 
     def run_command(self, cmd):
         '''
@@ -42,19 +39,29 @@ class Worker(object):
 
         return self.run_command(['bash', script_path])
 
-    @queue_method
-    def deploy(self, tmp_path=None):
+    def deploy(self, tmp_path=None, repo_name, origin):
         '''
         Run build and deployment based on the config file.
         '''
-        print('Deploying %s' % self.repo_name)
-        if not tmp_path:
-            # Repo should have been cloned to /tmp/<repo-name>
-            tmp_path = os.path.abspath(os.path.join(os.sep, 'tmp', self.repo_name))
+        # Copy config
+        config = self.config
 
-        print('Cloning {origin} into {tmp_path}...'.format(origin=self.origin,
-                                                           tmp_path=tmp_path))
-        self.run_command(['git', 'clone', self.origin, tmp_path])
+        print('Deploying %s' % self.repo_name)
+
+        # Check if git repo exists -- if not, make it
+        if no_repo:
+            if not tmp_path:
+                # Repo should have been cloned to /tmp/<repo-name>
+                tmp_path = os.path.abspath(os.path.join(os.sep, 'tmp', self.repo_name))
+
+            print('Cloning {origin} into {tmp_path}...'.format(origin=self.origin,
+                                                            tmp_path=tmp_path))
+            self.run_command(['git', 'clone', '--depth=1', self.origin, tmp_path])
+            self.run_command(['git', 'checkout', config.branch])
+        else:
+            self.run_command(['git', 'fetch', '--all'])
+            self.run_command(['git', 'checkout', config.branch])
+            self.run_command(['git', 'reset', '--hard', 'origin/{}'.format(config.branch)])
 
         # Check for a yaml file
         yml_file = os.path.join(tmp_path, 'deploy.yml')
@@ -87,16 +94,16 @@ class Worker(object):
         if not clone_path:
             raise WorkerException('Deployment file %s is missing `clone` directive' % config_file)
 
-        # Move repo from tmp to the clone path
-        print('Moving repo from {tmp_path} to {clone_path}...'.format(tmp_path=tmp_path,
-                                                                      clone_path=clone_path))
-        self.run_command(['mv', tmp_path, clone_path])
-
         # Run build scripts, if they exist
         for script in build_scripts:
             script_path = os.path.join(clone_path, script)
             print('Running build script %s...' % script_path)
             self.run_script(script_path)
+
+        # Move repo from tmp to the clone path
+        print('Moving repo from {tmp_path} to {clone_path}...'.format(tmp_path=tmp_path,
+                                                                      clone_path=clone_path))
+        self.run_command(['rsync', 'avz', 'delete', tmp_path, clone_path])
 
         # Run deploy scripts, if they exist
         for script in deploy_scripts:
@@ -107,3 +114,9 @@ class Worker(object):
         print('Finished deploying %s!' % self.repo_name)
 
         return True
+
+    def run(self):
+        while True:
+            work = self.queue.pop()
+            if work:
+                self.deploy(work)

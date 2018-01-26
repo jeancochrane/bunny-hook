@@ -33,8 +33,8 @@ def receive_post(branch_name):
             repo_name = repo['name']
             status_code = 202
             resp['status'] = 'Running build!'
-            worker = Worker(repo_name, origin)
-            worker.deploy.delay()
+            queue = Queue()
+            queue.add(repo_name, origin)
         else:
             # Nothing to do
             status_code = 402

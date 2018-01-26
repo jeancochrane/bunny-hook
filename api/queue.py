@@ -1,27 +1,34 @@
 # queue.py -- run tasks from a queue
 
 
-def queue_method():
-    '''
-    Decorator that adds a `delay` function to a method of a class instance,
-    allowing that method to be queued up instead of run synchronously.
+class Queue(object):
+    # Hard-coded connection string? Or read config file?
 
-    Major props to @evz for establishing this paradigm for functions.
-    '''
-    def delay(*args, **kwargs):
-        pass
+    def add(self, repo_name, origin):
+        # Name of the repo
+        self.repo_name = repo_name
 
-    f.delay = delay
-    return f
+        # Git origin
+        self.origin = origin
 
+    def pop(self):
+        # Take the most recent job off the queue
+
+    def run(self):
+        while True:
+            work = self.pop()
+            if work:
+                # run work
 
 def run_queue():
     '''
     Infinite loop to check for work and pull it off the queue.
     '''
     while True:
-        pass
+         
 
 if __name__ == '__main__':
 
-    run_queue()
+    queue = Queue()
+    queue.run()
+
