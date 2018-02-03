@@ -29,7 +29,6 @@ def receive_post(branch_name):
         repo = post.get('repository')
 
         if branch == branch_name and repo:
-
             repo_name = repo['name']
             status_code = 202
             resp['status'] = 'Running build!'

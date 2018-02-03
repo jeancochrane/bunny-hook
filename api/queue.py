@@ -13,19 +13,13 @@ class Queue(object):
 
     def pop(self):
         # Take the most recent job off the queue
+        pass
 
     def run(self):
         while True:
             work = self.pop()
             if work:
                 # run work
-
-def run_queue():
-    '''
-    Infinite loop to check for work and pull it off the queue.
-    '''
-    while True:
-         
 
 if __name__ == '__main__':
 

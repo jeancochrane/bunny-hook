@@ -7,5 +7,6 @@ class Parse(object):
         #
         # Merge
 
-    def parse()
+    def parse():
+        pass
 

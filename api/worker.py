@@ -114,9 +114,3 @@ class Worker(object):
         print('Finished deploying %s!' % self.repo_name)
 
         return True
-
-    def run(self):
-        while True:
-            work = self.queue.pop()
-            if work:
-                self.deploy(work)
