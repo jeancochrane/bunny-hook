@@ -1,15 +1,13 @@
 # queue.py -- run tasks from a queue
+from api.worker import Worker
 
 
 class Queue(object):
-    # Hard-coded connection string? Or read config file?
+    # Hard-coded connection string? Or read from config file?
 
-    def add(self, repo_name, origin):
-        # Name of the repo
-        self.repo_name = repo_name
-
-        # Git origin
-        self.origin = origin
+    def add(self, payload):
+        # Package up the payload and drop it into the queue
+        pass
 
     def pop(self):
         # Take the most recent job off the queue
@@ -19,10 +17,5 @@ class Queue(object):
         while True:
             work = self.pop()
             if work:
-                # run work
-
-if __name__ == '__main__':
-
-    queue = Queue()
-    queue.run()
-
+                worker = Worker()
+                worker.deploy(work)

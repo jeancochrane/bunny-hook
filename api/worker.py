@@ -6,7 +6,6 @@ import stat
 import yaml
 
 from api.exceptions import WorkerException
-from api.queue import queue_method
 
 
 class Worker(object):
@@ -14,7 +13,6 @@ class Worker(object):
     Class for handling all of the build stuff. Assume synchronous execution.
     '''
     def __init__(self, cfg_file):
-        self.queue = Queue()
         self.config = Parse(cfg_file)
 
     def run_command(self, cmd):
@@ -39,7 +37,7 @@ class Worker(object):
 
         return self.run_command(['bash', script_path])
 
-    def deploy(self, tmp_path=None, repo_name, origin):
+    def deploy(self, repo_name, origin, tmp_path=None):
         '''
         Run build and deployment based on the config file.
         '''
