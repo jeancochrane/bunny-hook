@@ -10,10 +10,13 @@ from api.exceptions import WorkerException
 
 class Worker(object):
     '''
-    Class for handling all of the build stuff. Assume synchronous execution.
+    Perform a build based on a GitHub API payload.
     '''
-    def __init__(self, cfg_file):
-        self.config = Parse(cfg_file)
+    config_file = 'config.yml'
+
+    def __init__(self, cfg_file=None):
+        if cfg_file:
+            self.config = Parse(cfg_file)
 
     def run_command(self, cmd):
         '''

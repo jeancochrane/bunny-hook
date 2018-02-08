@@ -8,15 +8,29 @@ from api.worker import Worker
 
 
 class Queue(object):
-    # Default connection string
+    '''
+    Create and manage a queue of deployment jobs. This class connects the API
+    and the Worker, so that deployment doesn't have to be attached to the
+    request/response cycle.
+    '''
+    # Default SQLite connection string
     db_conn = 'hook.db'
 
-    def __init__(self):
-        # Establish persistent database connection
-        self.conn = sqlite3.connect(db_conn)
+    def __init__(self, db_conn=None):
+        '''
+        Initialize a connection to the datastore.
+
+        Args:
+            - db_conn (string): Optional SQLite connection string, if the class
+                                should use a different datastore.
+        '''
+        if db_conn:
+            self.db_conn = db_conn
+
+        self.conn = sqlite3.connect(self.db_conn)
         self.cursor = self.conn.cursor()
 
-        # Create the table if it doesn't exist
+        # Create a table for the queue if it doesn't exist
         create_table = '''
             CREATE TABLE IF NOT EXISTS queue
                 (id TEXT, payload TEXT, date_added NUMERIC)
@@ -24,7 +38,12 @@ class Queue(object):
         self.cursor.execute(create_table)
 
     def add(self, payload):
-        # Package up the payload and drop it into the queue
+        '''
+        Package up a work payload and drop it into the queue.
+
+        Args:
+            - payload (dict): An event from the GitHub API.
+        '''
         insert = '''
             INSERT INTO queue
                      (id, payload, date_added)
@@ -33,20 +52,41 @@ class Queue(object):
         self.cursor.execute(insert, (str(uuid4()), json.dumps(payload), time.time()))
 
     def pop(self):
-        # Select the most recent job in the queue
+        '''
+        Return the most recent payload and remove it from the queue.
+        '''
         self.cursor.execute('SELECT * FROM queue ORDER BY date_added LIMIT 1')
-
         work = self.cursor.fetchone()
-        work_id = work[0]
+
+        if work:
+            work_id = work[0]
+            payload = json.loads(work[1])
+        else:
+            # No work in the queue
+            return None
 
         # Delete the job from the queue
         self.cursor.execute('DELETE FROM queue WHERE id = ?', (work_id,))
 
-        return work
+        return Work(payload)
 
     def run(self):
-        while True:
-            work = self.pop()
-            if work:
-                worker = Worker()
-                worker.deploy(work)
+        '''
+        Check for work on the queue, and if it exists, deploy it.
+        '''
+        work = self.pop()
+        if work:
+            worker = Worker()
+            worker.deploy(work)
+
+
+class Work(object):
+    '''
+    An interface abstraction for payload objects that formats them
+    for the queue.
+    '''
+    def __init__(self, payload):
+        self.payload = payload
+
+    def get(self):
+        return self.payload
