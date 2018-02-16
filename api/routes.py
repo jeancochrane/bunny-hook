@@ -8,6 +8,7 @@ from flask import request, make_response, g
 
 from api import app
 from api.queue import Queue
+from api.payload import Payload
 
 
 def prep_response(request, resp, status_code):
@@ -40,39 +41,33 @@ def prep_response(request, resp, status_code):
     return response
 
 
-def queue(payload, branch_name):
+def queue(payload_json, branch_name):
     '''
     Drop new work into the queue to prepare builds.
 
     Arguments:
-        - payload (dict):      -> POST request information received from GitHub
+        - payload_json (dict):      -> POST request information received from GitHub
         - branch_name (string) -> Name of the branch that was POSTed to
     '''
-    # Check that the push event matches the condition for new builds
-    ref = payload.get('ref')
+    payload = Payload(payload_json)
 
-    # Parse
-    if ref:
-        # For docs on the GitHub PushEvent payload, see
-        # https://developer.github.com/v3/activity/events/types/#pushevent
-        branch = ref.split('/')[-1]
-        repo = payload.get('repository')
+    if payload.validate(branch_name):
+        # This branch is approved for builds, so queue up work
+        queue = Queue()
+        queue.add(payload_json)
 
-        if branch == branch_name and repo:
-            # This branch is approved for builds, so queue up work
-            queue = Queue()
-            queue.add(payload)
+        status_code = 202
+        status = 'Build started for ref %s of repo %s' % (payload.get('ref'),
+                                                          payload.get('repository')['name'])
 
-            status_code = 202
-            status = 'Build started for branch %s of repo %s' % (branch, repo.get('name'))
-
-        else:
-            # Branch not approved; nothing to do
-            status_code = 402
-            status = 'Skipping build for unregistered branch "{branch}"'.format(branch=branch)
     else:
+        # Branch not approved; nothing to do
         status_code = 400
-        status = 'Could not find required attribute `ref` in the request payload'
+
+        if payload.get('ref'):
+            status = 'Skipping build for unregistered branch "{ref}"'.format(ref=payload.get('ref'))
+        else:
+            status = 'Malformed request payload: {payload}'.format(payload=payload.as_dict)
 
     # Return response
     resp = {'status': status}
@@ -112,8 +107,8 @@ def receive_post(branch_name):
         for token in tokens:
             if get_hmac(token) == post_sig:
                 # Payload is good; queue up work
-                payload = request.get_json()
-                return queue(payload, branch_name)
+                payload_json = request.get_json()
+                return queue(payload_json, branch_name)
 
         # None of the tokens matched
         status_code = 401

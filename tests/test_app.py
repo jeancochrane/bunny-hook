@@ -42,7 +42,7 @@ class TestAPI(TestCase):
         Test a successful request.
         '''
         post_data = json.dumps({
-                'ref': 'refs/heads/master',
+                'ref': 'refs/head/master',
                 'repository': {
                     'name': 'test-repo'
                 }
@@ -60,7 +60,7 @@ class TestAPI(TestCase):
         self.assertEqual(post_request.status_code, 202)
 
         response = json.loads(post_request.data.decode('utf-8'))
-        expected = 'Build started for branch master of repo test-repo'
+        expected = 'Build started for ref refs/head/master of repo test-repo'
         self.assertEqual(response.get('status'), expected)
 
     def test_authentication_failed(self):
@@ -68,7 +68,7 @@ class TestAPI(TestCase):
         Test a bad request where the secret token doesn't authenticate.
         '''
         post_data = json.dumps({
-                'ref': 'refs/heads/master',
+                'ref': 'refs/head/master',
                 'repository': {
                     'name': 'test-repo'
                 }
@@ -105,10 +105,10 @@ class TestAPI(TestCase):
                                          data=post_data,
                                          headers=headers)
 
-        self.assertEqual(post_request.status_code, 402)
+        self.assertEqual(post_request.status_code, 400)
 
         response = json.loads(post_request.data.decode('utf-8'))
-        msg = 'Skipping build for unregistered branch "master"'
+        msg = 'Skipping build for unregistered branch "refs/heads/master"'
         self.assertEqual(response.get('status'), msg)
 
     def test_no_ref(self):
@@ -129,5 +129,5 @@ class TestAPI(TestCase):
         self.assertEqual(post_request.status_code, 400)
 
         response = json.loads(post_request.data.decode('utf-8'))
-        expected = 'Could not find required attribute `ref` in the request payload'
+        expected = "Malformed request payload: {'test': 'test'}"
         self.assertEqual(response.get('status'), expected)

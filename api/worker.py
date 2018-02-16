@@ -1,22 +1,23 @@
-# worker.py -- runs work (build scripts). Eventually, should run off of a Redis queue
+# worker.py -- runs work (build scripts)
 import os
 import subprocess
-import stat
 
 import yaml
 
 from api.exceptions import WorkerException
+from api.payload import Payload
 
 
 class Worker(object):
     '''
     Perform a build based on a GitHub API payload.
     '''
-    config_file = 'config.yml'
+    def __init__(self, payload):
+        self.payload = Payload(payload)
 
-    def __init__(self, cfg_file=None):
-        if cfg_file:
-            self.config = Parse(cfg_file)
+        self.repo_name = self.payload.get('repo_name')
+        self.origin = self.payload.get('origin')
+        self.branch = self.payload.get('branch')
 
     def run_command(self, cmd):
         '''
@@ -40,13 +41,10 @@ class Worker(object):
 
         return self.run_command(['bash', script_path])
 
-    def deploy(self, repo_name, origin, tmp_path=None):
+    def deploy(self, tmp_path=None):
         '''
         Run build and deployment based on the config file.
         '''
-        # Copy config
-        config = self.config
-
         print('Deploying %s' % self.repo_name)
 
         # Check if git repo exists -- if not, make it
@@ -58,11 +56,11 @@ class Worker(object):
             print('Cloning {origin} into {tmp_path}...'.format(origin=self.origin,
                                                             tmp_path=tmp_path))
             self.run_command(['git', 'clone', '--depth=1', self.origin, tmp_path])
-            self.run_command(['git', 'checkout', config.branch])
+            self.run_command(['git', 'checkout', self.branch])
         else:
             self.run_command(['git', 'fetch', '--all'])
-            self.run_command(['git', 'checkout', config.branch])
-            self.run_command(['git', 'reset', '--hard', 'origin/{}'.format(config.branch)])
+            self.run_command(['git', 'checkout', self.branch])
+            self.run_command(['git', 'reset', '--hard', 'origin/{}'.format(self.branch)])
 
         # Check for a yaml file
         yml_file = os.path.join(tmp_path, 'deploy.yml')

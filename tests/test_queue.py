@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from unittest import TestCase, main
+from unittest import TestCase
 from unittest.mock import patch
 
 import env
@@ -41,7 +41,7 @@ class TestQueue(TestCase):
         self.queue.add(payload)
 
         work = self.queue.pop()
-        self.assertTrue(work.get() == payload)
+        self.assertTrue(work == payload)
 
     def test_queue_pop_no_work(self):
         self.assertIsNone(self.queue.pop())

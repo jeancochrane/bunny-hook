@@ -68,25 +68,13 @@ class Queue(object):
         # Delete the job from the queue
         self.cursor.execute('DELETE FROM queue WHERE id = ?', (work_id,))
 
-        return Work(payload)
+        return payload
 
     def run(self):
         '''
         Check for work on the queue, and if it exists, deploy it.
         '''
-        work = self.pop()
-        if work:
-            worker = Worker()
-            worker.deploy(work)
-
-
-class Work(object):
-    '''
-    An interface abstraction for payload objects that formats them
-    for the queue.
-    '''
-    def __init__(self, payload):
-        self.payload = payload
-
-    def get(self):
-        return self.payload
+        payload = self.pop()
+        if payload:
+            worker = Worker(payload)
+            worker.deploy()
