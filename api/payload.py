@@ -32,6 +32,26 @@ class Payload(object):
         '''
         return self.dict.get(attr)
 
+    def get_branch(self):
+        '''
+        Return the name of the branch recorded in the payload.
+        '''
+        ref = self.get('ref')
+        return ref.split('/')[-1]
+
+    def get_origin(self):
+        '''
+        Return the URL that the repo can be cloned from.
+        '''
+        return self.get('clone_url')
+
+    def get_name(self):
+        '''
+        Return the name of the repo recorded in the payload.
+        '''
+        repository = self.get('repository')
+        return repository.get('name')
+
     @property
     def as_dict(self):
         '''

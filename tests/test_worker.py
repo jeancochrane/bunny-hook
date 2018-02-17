@@ -10,10 +10,15 @@ from decorators import mock_subprocess
 class TestWorker(TestCase):
 
     def setUp(self):
-        repo_name = 'bunny-hook'
-        origin = 'https://github.com/jeancochrane/bunny-hook.git'
+        payload = {
+            'ref': 'refs/head/master',
+            'repository': {
+                'name': 'bunny-hook'
+            },
+            'clone_url': 'https://github.com/jeancochrane/bunny-hook.git'
+        }
 
-        self.worker = Worker(repo_name, origin)
+        self.worker = Worker(payload)
 
     def test_run_command_succeeds(self):
         cmd = self.worker.run_command(['echo', '"Run command succeeded!"'])

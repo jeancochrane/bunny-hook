@@ -13,15 +13,19 @@ class Worker(object):
     Perform a build based on a GitHub API payload.
     '''
     def __init__(self, payload):
+        '''
+        Initialize the Worker with attributes from the payload that are
+        necessary for cloning the repo.
+        '''
         self.payload = Payload(payload)
 
-        self.repo_name = self.payload.get('repo_name')
-        self.origin = self.payload.get('origin')
-        self.branch = self.payload.get('branch')
+        self.repo_name = self.payload.get_name()
+        self.origin = self.payload.get_origin()
+        self.branch = self.payload.get_branch()
 
     def run_command(self, cmd):
         '''
-        Wrapper on `subprocess.run` to run commands and fail noisily.
+        Helper method that wraps `subprocess.run` to run commands and fail noisily.
         '''
         try:
             return subprocess.run(cmd, check=True, universal_newlines=True)
