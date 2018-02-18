@@ -13,6 +13,14 @@ class TestQueue(TestCase):
     def setUpClass(cls):
         cls.queue = Queue('test.db')
 
+        cls.payload = {
+            'ref': 'refs/head/master',
+            'repository': {
+                'name': 'bunny-hook'
+            },
+            'clone_url': 'https://github.com/jeancochrane/bunny-hook.git'
+        }
+
     @classmethod
     def tearDownClass(cls):
         os.remove('test.db')
@@ -30,26 +38,23 @@ class TestQueue(TestCase):
             queue_table = self.queue.cursor.execute(create_table)
 
     def test_queue_add(self):
-        payload = {'test': 123}
-        self.queue.add(payload)
+        self.queue.add(self.payload)
 
         queue = self.queue.cursor.execute('SELECT * FROM queue').fetchall()
         self.assertTrue(len(queue) > 0)
 
     def test_queue_pop(self):
-        payload = {'test': 123}
-        self.queue.add(payload)
+        self.queue.add(self.payload)
 
         work = self.queue.pop()
-        self.assertTrue(work == payload)
+        self.assertTrue(work == self.payload)
 
     def test_queue_pop_no_work(self):
         self.assertIsNone(self.queue.pop())
 
     @patch('api.queue.Worker.deploy')
     def test_queue_run(self, mock_deploy):
-        payload = {'test': 123}
-        self.queue.add(payload)
+        self.queue.add(self.payload)
 
         # Check that work was added to the queue
         queue = self.queue.cursor.execute('SELECT * FROM queue').fetchall()
