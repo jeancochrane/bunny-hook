@@ -63,13 +63,16 @@ class Worker(object):
 
         # If the repo exists already in the tmp path, remove it
         if os.path.exists(tmp_path):
-            logging.info('Removing existing work in %s...' % tmp_path)
-            shutil.rmtree(tmp_path)
+            logging.info('Updating work in %s...' % tmp_path)
+            self.run_command(['git', '-C', tmp_path, 'fetch', '--depth=1', 'origin', self.branch])
+            self.run_command(['git', '-C', tmp_path, 'checkout', self.branch])
+            self.run_command(['git', '-C', tmp_path, 'reset', '--hard', self.branch])
 
-        logging.info('Cloning {origin} into {tmp_path}...'.format(origin=self.origin,
-                                                            tmp_path=tmp_path))
-        self.run_command(['git', 'clone', '--depth=1', '--branch', self.branch, self.origin, tmp_path])
-        self.run_command(['git', '-C', tmp_path, 'checkout', self.branch])
+        else:
+            logging.info('Cloning {origin} into {tmp_path}...'.format(origin=self.origin,
+                                                                tmp_path=tmp_path))
+            self.run_command(['git', 'clone', '--depth=1', '--branch', self.branch, self.origin, tmp_path])
+            self.run_command(['git', '-C', tmp_path, 'checkout', self.branch])
 
         # Check for a yaml file
         yml_file = os.path.join(tmp_path, 'deploy.yml')
