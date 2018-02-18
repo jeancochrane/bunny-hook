@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "Test script runs successfully!"
+echo "Test script runs successfully!" > /dev/null

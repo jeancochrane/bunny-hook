@@ -1,6 +1,9 @@
 class Payload(object):
     '''
     Parse a payload from the GitHub API.
+
+    Assume JSON structure from the GitHub PushEvent payload. For docs, see:
+    https://developer.github.com/v3/activity/events/types/#pushevent
     '''
     def __init__(self, payload):
         self.dict = payload
@@ -10,18 +13,11 @@ class Payload(object):
         Check that the payload is well formed and corresponds to a registered
         branch.
         '''
-        # Check that the push event matches the condition for new builds
+        # Check that the push event has the required attributes for new builds
         ref = self.get('ref')
 
-        # Parse
-        if ref:
-            # For docs on the GitHub PushEvent payload, see
-            # https://developer.github.com/v3/activity/events/types/#pushevent
-            branch = ref.split('/')[-1]
-            repo = self.get('repository')
-
-            if branch == registered_branch and repo:
-                return True
+        if ref and self.get('repository') and self.get_branch() == registered_branch:
+            return True
 
         return False
 
