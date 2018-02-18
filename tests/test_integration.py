@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import patch
 import io
 import os
 import sys
@@ -9,22 +10,14 @@ from api.worker import Worker
 from decorators import mock_scripts
 
 
-class stdout(list):
+class MockLogger(object):
+    '''
+    Redirect logging output so that we can check what gets logged.
+    '''
+    messages = []
 
-    def __enter__(self):
-        # Save initial value of sys.stdout
-        self.stdout = sys.stdout
-
-        # Point sys.stdout at an IO object on this class
-        sys.stdout = self._stringio = io.StringIO()
-        return self
-
-    def __exit__(self, *args):
-        # Save stdout to this object
-        self.extend(self._stringio.getvalue().splitlines())
-
-        # Reset sys.stdout
-        sys.stdout = self.stdout
+    def __call__(self, message):
+        self.messages.append(message)
 
 
 class TestIntegration(TestCase):
@@ -55,8 +48,39 @@ class TestIntegration(TestCase):
         '''
         # Clone the repo as a subdirectory in the tests repo, so that we can
         # clean it up easily
-        with stdout() as output:
+        with patch('logging.info', new_callable=MockLogger) as output:
             self.worker.deploy(tmp_path='./bunny-test')
+
+        expected = [
+            'Deploying bunny-test',
+            'Cloning https://github.com/jeancochrane/bunny-test.git into ./bunny-test...',
+            'Loading config file from ./bunny-test/deploy.yml...',
+            'Moving repo from ./bunny-test to ./bunny-test/...',
+            'Running prebuild script ./bunny-test/scripts/prebuild.sh...',
+            'Running build script ./bunny-test/scripts/build.sh...',
+            'Running deployment script ./bunny-test/scripts/deploy.sh...',
+            'Finished deploying bunny-test!',
+            '---------------------'
+        ]
+
+        self.assertEqual(output.messages, expected)
+
+        # Assert repo exists in build location
+        self.assertTrue(os.path.exists('bunny-test'))
+
+        # Remove new repo
+        shutil.rmtree('bunny-test')
+
+    @mock_scripts
+    def test_deploy_twice(self):
+        '''
+        Make sure the worker can deploy when a tmp directory already exists.
+        '''
+        # Deploy once
+        self.worker.deploy(tmp_path='./bunny-test')
+
+        # Deploy twice
+        self.worker.deploy(tmp_path='./bunny-test')
 
         # Assert repo exists in build location
         self.assertTrue(os.path.exists('bunny-test'))

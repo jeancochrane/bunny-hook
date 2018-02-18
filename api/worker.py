@@ -3,6 +3,7 @@ import os
 import subprocess
 import logging
 import sys
+import shutil
 
 import yaml
 
@@ -59,6 +60,11 @@ class Worker(object):
         if not tmp_path:
             # Default to /tmp/<repo-name>
             tmp_path = os.path.abspath(os.path.join(os.sep, 'tmp', self.repo_name))
+
+        # If the repo exists already in the tmp path, remove it
+        if os.path.exists(tmp_path):
+            logging.info('Removing existing work in %s...' % tmp_path)
+            shutil.rmtree(tmp_path)
 
         logging.info('Cloning {origin} into {tmp_path}...'.format(origin=self.origin,
                                                             tmp_path=tmp_path))
