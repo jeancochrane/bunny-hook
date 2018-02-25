@@ -83,7 +83,7 @@ def get_hmac(token):
         - token (str) -> Secret key to use for the hash.
     '''
     token_sig = hmac_new(token.encode('utf-8'), digestmod='sha1')
-    return 'sha1' + token_sig.hexdigest()
+    return 'sha1=' + token_sig.hexdigest()
 
 
 @app.route('/hooks/github/<branch_name>', methods=['POST'])
