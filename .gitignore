@@ -102,3 +102,6 @@ ENV/
 
 # Bunny secrets
 api/secrets.py
+
+# Test db
+hook.db
