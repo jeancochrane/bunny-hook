@@ -9,7 +9,11 @@ from flask import request, make_response, g
 from api import app
 from api.queue import Queue
 from api.payload import Payload
-from api.secrets import TOKENS
+
+try:
+    from api.secrets import TOKENS
+except ImportError:
+    logging.error('Required secrets file not found. See api/secrets.example.py for setup information.')
 
 
 def prep_response(request, resp, status_code):
