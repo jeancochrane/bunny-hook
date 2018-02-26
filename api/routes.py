@@ -1,7 +1,7 @@
 # app.py -- routes for the app
 import json
 import logging
-from hmac import new as hmac_new
+import hmac
 from datetime import datetime
 
 from flask import request, make_response, g
@@ -9,6 +9,7 @@ from flask import request, make_response, g
 from api import app
 from api.queue import Queue
 from api.payload import Payload
+from api.secrets import TOKENS
 
 
 def prep_response(request, resp, status_code):
@@ -82,7 +83,7 @@ def get_hmac(token):
     Arguments:
         - token (str) -> Secret key to use for the hash.
     '''
-    token_sig = hmac_new(token.encode('utf-8'), digestmod='sha1')
+    token_sig = hmac.new(token.encode('utf-8'), digestmod='sha1')
     return 'sha1=' + token_sig.hexdigest()
 
 
@@ -101,23 +102,22 @@ def receive_post(branch_name):
     post_sig = request.headers.get('X-Hub-Signature')
 
     if post_sig:
-        # Retrieve secret tokens from the application context
-        tokens = g.get('tokens', [])
-
-        for token in tokens:
-            if get_hmac(token) == post_sig:
+        try:
+            if hmac.compare_digest(get_hmac(TOKENS[branch_name]), post_sig):
                 # Payload is good; queue up work
                 payload_json = request.get_json()
                 return queue(payload_json, branch_name)
+            else:
+                # None of the tokens matched
+                status = 'Request signature failed to authenticate'
 
-        # None of the tokens matched
-        status_code = 401
-        status = 'Request signature failed to authenticate'
+        except KeyError:
+            # TOKENS[branch_name] isn't set
+            status = 'No token configured for ' + branch_name
 
     else:
-        status_code = 400
         status = 'Authentication signature not found'
 
     # Return response
     resp = {'status': status}
-    return prep_response(request, resp, status_code)
+    return prep_response(request, resp, 403)
