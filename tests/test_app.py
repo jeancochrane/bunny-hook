@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import patch
 import json
 import sys
 
@@ -6,11 +7,11 @@ from werkzeug.datastructures import Headers
 
 import env
 import test_secrets
-sys.modules['api.secrets'] = test_secrets
 import api
 from api.routes import get_hmac
 
 
+@patch.object(api.secrets, 'TOKENS', test_secrets.TOKENS)
 class TestAPI(TestCase):
 
     @classmethod
