@@ -82,10 +82,8 @@ class Queue(object):
         Check for work on the queue, and if it exists, deploy it.
         '''
         # Look for any work on the queue
-        self.cursor.execute('SELECT * FROM queue')
-        work = self.cursor.fetchone()
+        payload = self.pop()
 
-        if work:
-            payload = self.pop()
+        if payload:
             worker = Worker(payload)
             worker.deploy()
