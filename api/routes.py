@@ -4,7 +4,7 @@ import logging
 import hmac
 from datetime import datetime
 
-from flask import request, make_response, g
+from flask import request, make_response
 
 from api import app
 from api.queue import Queue
