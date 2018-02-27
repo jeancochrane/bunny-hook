@@ -62,9 +62,6 @@ class Queue(object):
         '''
         Return the most recent payload and remove it from the queue.
         '''
-        # Start a transaction for the duration of the write
-        self.cursor.execute('BEGIN TRANSACTION')
-
         self.cursor.execute('SELECT * FROM queue ORDER BY date_added LIMIT 1')
         work = self.cursor.fetchone()
 
@@ -78,8 +75,6 @@ class Queue(object):
             # No work was found in the queue
             payload = None
 
-        self.conn.commit()
-
         return payload
 
     def run(self):
@@ -87,10 +82,8 @@ class Queue(object):
         Check for work on the queue, and if it exists, deploy it.
         '''
         # Look for any work on the queue
-        self.cursor.execute('SELECT * FROM queue')
-        work = self.cursor.fetchone()
+        payload = self.pop()
 
-        if work:
-            payload = self.pop()
+        if payload:
             worker = Worker(payload)
             worker.deploy()
