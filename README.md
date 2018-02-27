@@ -25,7 +25,7 @@ pip install -U -r requirements.txt
 Copy the dummy secrets file so you can begin developing:
 
 ```bash
-cp api/secrets.py.example api/secrets.py
+cp api/secrets.example.py api/secrets.py
 ```
 
 ## Running the hook
