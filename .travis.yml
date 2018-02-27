@@ -2,8 +2,11 @@ branches:
   only:
     - master
 language: python
-python:
-- '3.5'
+matrix:
+  include:
+    - python: 3.6
+    - python: 3.5
+    - python: 3.4
 cache: pip
 install:
 - pip install --upgrade pip
