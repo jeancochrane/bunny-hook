@@ -1,1 +1,1 @@
-TOKENS = ['good token']
+TOKENS = {'master': 'good token'}
