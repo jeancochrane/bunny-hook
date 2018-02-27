@@ -14,8 +14,7 @@ try:
     from api.secrets import TOKENS
 except ModuleNotFoundError:
     logging.error('Required secrets file not found. See api/secrets.example.py for setup information.')
-    import sys
-    sys.exit(1)
+    raise
 
 def prep_response(request, resp, status_code):
     '''
