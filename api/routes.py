@@ -11,7 +11,7 @@ from api.queue import Queue
 from api.payload import Payload
 
 try:
-    from api.secrets import TOKENS
+    import api.secrets
 except ModuleNotFoundError:
     logging.error('Required secrets file not found. See api/secrets.example.py for setup information.')
     raise
@@ -107,7 +107,7 @@ def receive_post(branch_name):
 
     if post_sig:
         try:
-            if hmac.compare_digest(get_hmac(TOKENS[branch_name]), post_sig):
+            if hmac.compare_digest(get_hmac(api.secrets.TOKENS[branch_name]), post_sig):
                 # Payload is good; queue up work
                 payload_json = request.get_json()
                 return queue(payload_json, branch_name)
